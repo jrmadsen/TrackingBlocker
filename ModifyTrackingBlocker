@@ -171,8 +171,8 @@ case "$CMD" in
 	    echo -e "\nPlease provide website address\n"
 	    exit
 	else
-	    sudo echo "127.0.0.1  www."$2 >> $DATA_FOLDER/hosts.ultrasafe
-	    sudo echo "127.0.0.1  $2" >> $DATA_FOLDER/hosts.ultrasafe
+	    echo "127.0.0.1  www."$2 | sudo tee -a $DATA_FOLDER/hosts.ultrasafe
+	    echo "127.0.0.1  $2" | sudo tee -a $DATA_FOLDER/hosts.ultrasafe
 	fi
 	;;
 "remove")

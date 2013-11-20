@@ -22,6 +22,8 @@ endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O3 -Wall")
+else(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -stdlib=libc++ -O3 -Wall")
 endif()
 
 add_executable( ${MAIN} ${MAIN}.cc ${tools} ${TB})
