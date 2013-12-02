@@ -64,8 +64,8 @@ public:
     
     bool valid() const
     {
-        return ((ip_id.length() > 0 && host.length() > 0) ||
-                (ip_id.find("0.0.0.0") == std::string::npos &&
+        return ((ip_id.length() > 0 && host.length() > 0) &&
+                (ip_id.find("0.0.0.0") == std::string::npos ||
                  ip_id.find("127.0.0.1") == std::string::npos)) ? true : false;
     }
     
