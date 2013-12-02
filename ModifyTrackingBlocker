@@ -10,9 +10,9 @@ if [ -z "$1" ]; then
     echo -e '\tORIGINAL : no blocking of tracking sites'
     echo -e '\tSAFE : uses list of tracking sites from one source'
     echo -e '\tULTRASAFE : uses lists from 3 different source'
-    echo -e '\tADD : add website domain to ultrasafe (requires additional parameter - website domain)\n'
-    echo -e '\tREMOVE : remove a website domain (requires additional parameter\n'
-    echo -e '\tREREMOVE : remove previously removed websites (from hosts.removed)'
+    echo -e '\tADD : add website domain to ultrasafe (requires additional parameter - website domain)'
+    echo -e '\tREMOVE : remove a website domain (requires additional parameter'
+    echo -e '\tREREMOVE : remove previously removed websites (from hosts.removed)\n'
     exit
 fi
 
