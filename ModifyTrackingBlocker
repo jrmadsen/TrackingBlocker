@@ -2,7 +2,7 @@
 
 
 if [ -z "$1" ]; then
-    echo -e '\n\tPlease enter install, original, safe, ultrasafe, off, on, add, or stat'
+    echo -e '\n\tPlease enter [install] [on] [off] [stat] [original] [safe] [ultrasafe] [add] [remove] [reremove]'
     echo -e '\tINSTALL : copies some files and puts this file in your PATH so you can access it from anyhere in terminal'
     echo -e '\tON : same as ultrasafe (see below)'
     echo -e '\tOFF : same as original (see below)'
@@ -12,6 +12,7 @@ if [ -z "$1" ]; then
     echo -e '\tULTRASAFE : uses lists from 3 different source'
     echo -e '\tADD : add website domain to ultrasafe (requires additional parameter - website domain)\n'
     echo -e '\tREMOVE : remove a website domain (requires additional parameter\n'
+    echo -e '\tREREMOVE : remove previously removed websites (from hosts.removed)'
     exit
 fi
 
@@ -180,9 +181,16 @@ case "$CMD" in
 	    echo -e "\nPlease provide website address\n"
 	    exit
 	else
+        echo $(grep "$2" $DATA_FOLDER/hosts.ultrasafe) | sudo tee -a $DATA_FOLDER/hosts.removed
 	    sudo ssed -i "/$2/d" $DATA_FOLDER/hosts.ultrasafe
 	fi
 	;;
+"reremove")
+    while read line
+    do
+        sudo ssed -i "/$(echo $line | awk '{print $2}')/d" $DATA_FOLDER/hosts.ultrasafe
+    done < $DATA_FOLDER/hosts.removed
+    ;;
 *) echo "Unrecognized command: Options are install, off, on, stat, original, safe, ultrasafe, add"
 	exit
 	;;
