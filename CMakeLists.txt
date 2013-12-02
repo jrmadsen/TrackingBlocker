@@ -34,6 +34,7 @@ SET(HOST_FILES
     hosts.safe
     HOSTS
     hosts.txt
+    hosts.shc
   )
   
 foreach(_host ${HOST_FILES})
