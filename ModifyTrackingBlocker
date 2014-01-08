@@ -181,14 +181,21 @@ case "$CMD" in
 	    echo -e "\nPlease provide website address\n"
 	    exit
 	else
-        echo $(grep "$2" $DATA_FOLDER/hosts.ultrasafe) | sudo tee -a $DATA_FOLDER/hosts.removed
-	    sudo ssed -i "/$2/d" $DATA_FOLDER/hosts.ultrasafe
+        string="$(grep -h "$2" $DATA_FOLDER/hosts.ultrasafe)"
+        echo "STRING = $string --"
+        if [ ! -z "$string" ]; then
+            domain="$(echo $string | awk '{print $1}')"
+            addr="$(echo $string | awk '{print $2}')"
+            echo -e "$domain  $addr " | sudo tee -a $DATA_FOLDER/hosts.removed
+            sudo ssed -i "/$2/d" $DATA_FOLDER/hosts.ultrasafe
+        fi
 	fi
 	;;
 "reremove")
     while read line
     do
-        sudo ssed -i "/$(echo $line | awk '{print $2}')/d" $DATA_FOLDER/hosts.ultrasafe
+        #sudo ssed -i "/$(echo $line | awk '{print $2}')/d" $DATA_FOLDER/hosts.ultrasafe
+        sudo ssed -i "/$line /d" $DATA_FOLDER/hosts.ultrasafe
     done < $DATA_FOLDER/hosts.removed
     ;;
 *) echo "Unrecognized command: Options are install, off, on, stat, original, safe, ultrasafe, add"

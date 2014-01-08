@@ -97,7 +97,7 @@ public:
     
     friend std::ostream& operator<<(std::ostream& out, const IP_ADDRESS& ip)
     {
-        out << ip.ip_id << "  " << ip.host;
+        out << ip.ip_id << "  " << ip.host << " ";
         return out;
     }
 
