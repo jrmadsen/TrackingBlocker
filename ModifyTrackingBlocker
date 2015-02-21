@@ -25,7 +25,7 @@ fi
 
 
 CMD=$(echo "$1" | awk '{print tolower($1)}')
-DNSFLUSH="dscacheutil -flushcache"
+DNSFLUSH=""
 
 if [ "$CMD" == "add" -a -z "$2" ]; then
     echo -e '\n\tUse of "ADD" requires an additional parameter that specifies the website domain\n'
@@ -42,8 +42,8 @@ function ISFALSE() { return 1; }
 #  Set the folder paths
 #########################################################################
 INSTALL_FOLDER=/usr/local/bin
-DATA_FOLDER=/usr/local/include/TrackingBlocker
-HOST_FOLDER=/private/etc
+DATA_FOLDER=/usr/local/share/TrackingBlocker
+HOST_FOLDER=/etc
 
 #########################################################################
 #   Make sure the install directory exists
@@ -67,7 +67,7 @@ fi
 function ShouldModify () {
     
     if [ -z "$1" ]; then
-	echo -e "\nError is function : ShouldModify() - Not passed an argument\n"
+	echo -e "\nError is function : ShouldModify() - Not pased an argument\n"
 	exit
     else
 	echo "Checking condition"
@@ -84,17 +84,17 @@ case "$CMD" in
 
 "install") 
 	echo "Copying HOSTS files to $DATA_FOLDER"
-	if [ $(ls $(PWD)/hosts.* | wc -l) -eq 0 ]; then
+	if [ $(ls $(pwd)/hosts.* | wc -l) -eq 0 ]; then
 	    echo -e "\n\tNo HOSTS files in current directory. Please go to the install directory with hosts files\n"
 	    exit
 	fi
 	# Always copy over HOSTS FILES
 	echo "Installing host files..."
-	sudo cp $(PWD)/hosts* $DATA_FOLDER/
+	sudo cp $(pwd)/hosts* $DATA_FOLDER/
 	# if this is an update or not been installed before
 	if [ ! -e $INSTALL_FOLDER/ModifyTrackingBlocker ] || [ $(diff $PWD/ModifyTrackingBlocker $INSTALL_FOLDER/ModifyTrackingBlocker | wc -l) -gt 0 ]; then
 	    echo "Installing executable..."
-	    sudo cp $(PWD)/ModifyTrackingBlocker $INSTALL_FOLDER/
+	    sudo cp $(pwd)/ModifyTrackingBlocker $INSTALL_FOLDER/
 	fi
         # Saving original HOST file
 	if [ ! -e $DATA_FOLDER/hosts.original ]; then
@@ -187,15 +187,15 @@ case "$CMD" in
             domain="$(echo $string | awk '{print $1}')"
             addr="$(echo $string | awk '{print $2}')"
             echo -e "$domain  $addr " | sudo tee -a $DATA_FOLDER/hosts.removed
-            sudo ssed -i "/$2/d" $DATA_FOLDER/hosts.ultrasafe
+            sudo sed -i "/$2/d" $DATA_FOLDER/hosts.ultrasafe
         fi
 	fi
 	;;
 "reremove")
     while read line
     do
-        #sudo ssed -i "/$(echo $line | awk '{print $2}')/d" $DATA_FOLDER/hosts.ultrasafe
-        sudo ssed -i "/$line /d" $DATA_FOLDER/hosts.ultrasafe
+        #sudo sed -i "/$(echo $line | awk '{print $2}')/d" $DATA_FOLDER/hosts.ultrasafe
+        sudo sed -i "/$line /d" $DATA_FOLDER/hosts.ultrasafe
     done < $DATA_FOLDER/hosts.removed
     ;;
 *) echo "Unrecognized command: Options are install, off, on, stat, original, safe, ultrasafe, add"

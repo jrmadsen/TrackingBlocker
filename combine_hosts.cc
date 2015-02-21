@@ -124,16 +124,33 @@ private:
 
 //===================================================================================
 
-void WriteBeginning(std::ostream& out)
+void WriteBeginning(std::ostream& out, std::string file)
 {
-    out << "##\n# Host Database\n#\n# localhost is used to configure the loopback interface" << std::endl;
+  std::ifstream in(file.c_str());
+  std::stringstream ss;
+  if(in)
+  {
+    std::string line;
+    while(!in.eof())
+    {
+      getline(in, line);
+      ss << line << std::endl;
+    }
+    in.close();
+    out << ss.str();
+  } else {
+    throw std::runtime_error("Unable to open original hosts file");
+    exit(EXIT_FAILURE);
+  }
+
+  /*out << "##\n# Host Database\n#\n# localhost is used to configure the loopback interface" << std::endl;
     out << "# when the system is booting.  Do not change this entry.\n##" << std::endl;
     out << "127.0.0.1       localhost" << std::endl;
     out << "255.255.255.255 broadcasthost" << std::endl;
     out << "::1             localhost" << std::endl;
     out << "fe80::1%lo0     localhost" << std::endl;
     out << "0.0.0.0         ad.doubleclick.net" << std::endl;
-    out << std::endl;
+    out << std::endl;*/
 }
 
 //===================================================================================
@@ -144,13 +161,15 @@ int main(int argc, char** argv)
     std::string winhostfile = "HOSTS";
     std::vector<std::string> files;
     std::string output = "hosts.ultrasafe";
-    
+    std::string orig = "";
+
     CommandLineOptions* clo = new CommandLineOptions();
     
     clo->AddOption('f',"files","Provide files to combine",true,-1,FORCE);
     clo->AddOption('u',"update-winhost","Update the WIN host filename",false,0);
     clo->AddOption('o',"output-file","Provide the output file",true, 1);
-    
+    clo->AddOption('d',"default","Original hosts file",true, 1,FORCE);
+
     clo->ProcessCommandLine(argc,argv);
     
     //if(argc == 1) { Exception("File list","Please provide files to combine",Fatal); }
@@ -163,7 +182,8 @@ int main(int argc, char** argv)
     clo->GetOption('f', files);
     clo->GetOption('u', updatewinhosts);
     clo->GetOption('o', output);
-    
+    clo->GetOption('d', orig);
+
     if(updatewinhosts) {
         UpdateWinHosts();
         std::string dir = "WIN_HOSTS";
@@ -246,7 +266,7 @@ int main(int argc, char** argv)
     }
 
     std::ofstream out(output.c_str());
-    WriteBeginning(out);
+    WriteBeginning(out, orig);
     std::cout << "Printing IP hosts..." << std::endl;
     for( auto ip : IPS ) {
         out << ip << std::endl;
