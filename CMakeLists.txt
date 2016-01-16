@@ -41,20 +41,20 @@ foreach(_host ${HOST_FILES})
     configure_file(
         ${PROJECT_SOURCE_DIR}/share/${_host}
         ${PROJECT_BINARY_DIR}/share/${_host}
-        COPY_ONLY
+        COPYONLY
     )
 endforeach()
 
 configure_file(
         ${PROJECT_SOURCE_DIR}/share/hosts.safe
         ${PROJECT_BINARY_DIR}/hosts.safe
-        COPY_ONLY
+        COPYONLY
     )
     
 configure_file(
         ${PROJECT_SOURCE_DIR}/ModifyTrackingBlocker
         ${PROJECT_BINARY_DIR}/ModifyTrackingBlocker
-        COPY_ONLY
+        COPYONLY
     )
     
 install(TARGETS ${MAIN} DESTINATION bin)
