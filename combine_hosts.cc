@@ -59,33 +59,27 @@ public:
     { }
 
     ~IP_ADDRESS() { }
-    
+
     bool IsLocal() { return (tools::lower(host) == "localhost") ? true : false; }
-    
+
     bool valid() const
     {
         return ((ip_id.length() > 0 && host.length() > 0) &&
                 (ip_id.find("0.0.0.0") == std::string::npos ||
                  ip_id.find("127.0.0.1") == std::string::npos)) ? true : false;
     }
-    
+
     bool operator==(const IP_ADDRESS& rhs)
     {
         return (host.length() == rhs.host.length() &&
-                ip_id == rhs.ip_id &&
-                host == rhs.host
-                //ip_id == rhs.ip_id &&
-                //abs(host.length() - rhs.host.length()) <= 2 &&
-                //(host.find(rhs.host) != std::string::npos ||
-                // rhs.host.find(host) != std::string::npos)
-                ) ? true : false;
+                host == rhs.host) ? true : false;
     }
-    
+
     bool operator!=(const IP_ADDRESS& ip2)
     {
         return !(*this == ip2);
     }
-    
+
     IP_ADDRESS& operator=(const IP_ADDRESS& rhs)
     {
         if(*this != rhs) {
@@ -94,7 +88,7 @@ public:
         }
         return *this;
     }
-    
+
     friend std::ostream& operator<<(std::ostream& out, const IP_ADDRESS& ip)
     {
         out << ip.ip_id << "  " << ip.host << " ";
@@ -103,23 +97,18 @@ public:
 
     bool operator>(const IP_ADDRESS& ip2) const
     {
-        //return (ip_id > ip2.ip_id) ? true : (host > ip2.host) ? true : false;
-        return (ip_id > ip2.ip_id) ? true : false;
-        //return (host > ip2.host) ? true : false;
+        return (host > ip2.host) ? true : false;
     }
 
     bool operator<(const IP_ADDRESS& ip2) const
     {
-        //return (ip_id < ip2.ip_id) ? true : (host < ip2.host) ? true : false;
-        //return (ip_id < ip2.ip_id) ? true : false;
         return (host < ip2.host) ? true : false;
-        //return (host < ip2.host) ? true : (ip_id < ip2.ip_id) ? true : false;
     }
 
 private:
     std::string ip_id;
     std::string host;
-    
+
 };
 
 //===================================================================================
@@ -143,14 +132,6 @@ void WriteBeginning(std::ostream& out, std::string file)
     exit(EXIT_FAILURE);
   }
 
-  /*out << "##\n# Host Database\n#\n# localhost is used to configure the loopback interface" << std::endl;
-    out << "# when the system is booting.  Do not change this entry.\n##" << std::endl;
-    out << "127.0.0.1       localhost" << std::endl;
-    out << "255.255.255.255 broadcasthost" << std::endl;
-    out << "::1             localhost" << std::endl;
-    out << "fe80::1%lo0     localhost" << std::endl;
-    out << "0.0.0.0         ad.doubleclick.net" << std::endl;
-    out << std::endl;*/
 }
 
 //===================================================================================
@@ -164,21 +145,14 @@ int main(int argc, char** argv)
     std::string orig = "";
 
     CommandLineOptions* clo = new CommandLineOptions();
-    
+
     clo->AddOption('f',"files","Provide files to combine",true,-1,FORCE);
     clo->AddOption('u',"update-winhost","Update the WIN host filename",false,0);
     clo->AddOption('o',"output-file","Provide the output file",true, 1);
     clo->AddOption('d',"default","Original hosts file",true, 1,FORCE);
 
     clo->ProcessCommandLine(argc,argv);
-    
-    //if(argc == 1) { Exception("File list","Please provide files to combine",Fatal); }
-    
-    //std::vector<std::string> files;
-    //for(uint32 i = 1; i < argc; ++i) {
-    //    files.push_back(argv[i]);
-    //}
-    
+
     clo->GetOption('f', files);
     clo->GetOption('u', updatewinhosts);
     clo->GetOption('o', output);
@@ -193,13 +167,11 @@ int main(int argc, char** argv)
             Exception("Update WinHosts2002","Error unzipping " + file + " to directory",dir, WARNING);
         }
         winhostfile = dir + "/HOSTS";
-        
+	files.push_back(winhostfile);
     }
-    
+
     std::set<IP_ADDRESS> IPS;
     std::vector<std::string> discarded;
-    
-    files.push_back(winhostfile);
 
     for( auto file : files ) {
         std::vector<std::string> delimit;
@@ -271,18 +243,18 @@ int main(int argc, char** argv)
     for( auto ip : IPS ) {
         out << ip << std::endl;
     }
-    
+
     out.close();
-    
+
     std::cout << "Printing discarded..." << std::endl;
     std::ofstream discard("Discarded.txt");
-    
+
     for( auto something : discarded ) {
         discard << something << std::endl;
     }
-    
+
     discard.close();
-    
+
     return 0;
 }
 

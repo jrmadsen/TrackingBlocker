@@ -36,7 +36,7 @@ SET(HOST_FILES
     hosts.txt
     hosts.shc
   )
-  
+
 foreach(_host ${HOST_FILES})
     configure_file(
         ${PROJECT_SOURCE_DIR}/share/${_host}
@@ -50,12 +50,6 @@ configure_file(
         ${PROJECT_BINARY_DIR}/hosts.safe
         COPYONLY
     )
-    
-configure_file(
-        ${PROJECT_SOURCE_DIR}/ModifyTrackingBlocker
-        ${PROJECT_BINARY_DIR}/ModifyTrackingBlocker
-        COPYONLY
-    )
-    
+
 install(TARGETS ${MAIN} DESTINATION bin)
 #install(FILES ${PROJECT_SOURCE_DIR}/ModifyTrackingBlocker DESTINATION bin)
