@@ -30,7 +30,7 @@ std::string RemoveWeirdControlCharacters(const std::string& str)
 bool RemoveWeirdControlCharactersFile(const std::string& filename)
 {
     std::stringstream ss;
-    ss << "rm_CTRL-M.sh " << filename;
+    ss << "rm_CTRL-M " << filename;
     return (std::system(ss.str().c_str()) == 0) ? false : true;
 }
 
