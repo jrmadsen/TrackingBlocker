@@ -71,6 +71,11 @@ configure_file(
         COPYONLY
     )
 
+if(NOT CMAKE_INSTALL_PREFIX OR CMAKE_INSTALL_PREFIX MATCHES "/INSTALL")
+    set(CMAKE_INSTALL_PREFIX /usr/local CACHE PATH "Installation prefix" FORCE)
+endif()
+
+message(STATUS "Install prefix: ${CMAKE_INSTALL_PREFIX}")
 install(TARGETS ${MAIN} DESTINATION ${CMAKE_INSTALL_PREFIX}/libexec)
 
 message(STATUS "CXX FLAGS: ${CMAKE_CXX_FLAGS}")
