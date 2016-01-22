@@ -299,8 +299,9 @@ int main(int argc, char** argv)
     {
         std::string fname = odir + "Forbidden.txt";
         std::ofstream out(fname.c_str());
-        for(auto itr : *IPaddr::GetForbiddenList())
-            out << itr << std::endl;
+        if(out)
+            for(auto itr : *IPaddr::GetForbiddenList())
+                out << itr << std::endl;
     }
 
     std::set<IPaddr> ip_addresses;
@@ -375,22 +376,23 @@ int main(int argc, char** argv)
 
     output = odir + output;
     std::ofstream out(output.c_str());
-    WriteBeginning(out, orig);
-    std::cout << "Printing IP hosts : " << output << " ..." << std::endl;
-    for( auto ip : ip_addresses ) {
-        out << ip << std::endl;
+    if(out)
+    {
+        WriteBeginning(out, orig);
+        std::cout << "Printing IP hosts : " << output << " ..." << std::endl;
+        for( auto ip : ip_addresses )
+            out << ip << std::endl;
+        out.close();
+    } else {
+        throw std::runtime_error("Unable to open output file: " + output);
     }
-
-    out.close();
 
     std::cout << "Printing discarded..." << std::endl;
     std::string dname = odir + "Discarded.txt";
     std::ofstream discard(dname.c_str());
-
-    for( auto something : discarded ) {
-        discard << something << std::endl;
-    }
-
+    if(discard)
+        for( auto something : discarded )
+            discard << something << std::endl;
     discard.close();
 
     if(!win_host_folder.empty())
