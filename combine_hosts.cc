@@ -6,12 +6,41 @@
 
 #include "Tools.hh"
 #include "CommandLineOptions.hh"
+#include <string>
+#include <limits.h>
+#include <unistd.h>
 
-//===================================================================================
+#ifdef USE_PSTREAMS
+#   include <pstreams/pstream.h>
+#endif
+
+//============================================================================//
+
+std::string get_exe_path()
+{
+    char result[ PATH_MAX ];
+    ssize_t count = readlink( "/proc/self/exe", result, PATH_MAX );
+    return std::string( result, (count > 0) ? count : 0 );
+}
+
+//============================================================================//
+
+std::string get_working_path()
+{
+    char* cwd;
+    char buff[PATH_MAX + 1];
+
+    cwd = getcwd( buff, PATH_MAX + 1 );
+    if( cwd != NULL )
+        return std::string(cwd);
+    else
+        return "";
+}
+
+//============================================================================//
 
 std::string RemoveWeirdControlCharacters(const std::string& str)
 {
-    //std::cout << "Removing weird characters from " << str << "..." << std::flush;
     std::string retstr = "";
     for(uint32 i = 0; i < str.length(); ++i) {
         if(!isprint(str[i]) && (str[i] != '\n' || str[i] != ' ')) {
@@ -21,11 +50,10 @@ std::string RemoveWeirdControlCharacters(const std::string& str)
             retstr += str[i];
         }
     }
-    //std::cout << "DONE (" << retstr << ")" << std::endl;
     return retstr;
 }
 
-//===================================================================================
+//============================================================================//
 
 bool RemoveWeirdControlCharactersFile(const std::string& filename)
 {
@@ -34,14 +62,17 @@ bool RemoveWeirdControlCharactersFile(const std::string& filename)
     return (std::system(ss.str().c_str()) == 0) ? false : true;
 }
 
-//===================================================================================
+//============================================================================//
 
-int UpdateWinHosts()
+int UpdateWinHosts(std::string odir)
 {
-    return std::system("curl http://winhelp2002.mvps.org/hosts.zip > WINHOSTS2002.zip");
+    std::stringstream cmd;
+    cmd << "curl http://winhelp2002.mvps.org/hosts.zip > "
+        << tools::MakeDirectoryString(odir) << "WINHOSTS2002.zip";
+    return std::system(cmd.str().c_str());
 }
 
-//===================================================================================
+//============================================================================//
 
 int UnzipToFolder(const std::string& file, const std::string& directory)
 {
@@ -49,69 +80,88 @@ int UnzipToFolder(const std::string& file, const std::string& directory)
     return std::system(command.c_str());
 }
 
-//===================================================================================
+//============================================================================//
 
-class IP_ADDRESS
+class IPaddr
 {
 public:
-    IP_ADDRESS(const std::string& str1, const std::string& str2)
-    :   ip_id(RemoveWeirdControlCharacters(str1)), host(RemoveWeirdControlCharacters(str2))
-    { }
+    typedef std::string         IP_t;
+    typedef IP_t&               IP_t_ref;
+    typedef IP_t*               IP_t_ptr;
+    typedef const IP_t          cIP_t;
+    typedef const IP_t_ref      cIP_t_ref;
+    typedef const IP_t_ptr      cIP_t_ptr;
+    typedef std::set<IP_t>      ForbiddenList_t;
 
-    ~IP_ADDRESS() { }
-
-    bool IsLocal() { return (tools::lower(host) == "localhost") ? true : false; }
-
-    bool valid() const
+public:
+    //------------------------------------------------------------------------//
+    IPaddr(const std::string& str)
+    : host(RemoveWeirdControlCharacters(str))
     {
-        return ((ip_id.length() > 0 && host.length() > 0) &&
-                (ip_id.find("0.0.0.0") == std::string::npos ||
-                 ip_id.find("127.0.0.1") == std::string::npos)) ? true : false;
+        if(host.find("www.") == 0)
+            host.erase(host.find("www."), IP_t("www.").length());
     }
 
-    bool operator==(const IP_ADDRESS& rhs)
-    {
-        return (host.length() == rhs.host.length() &&
-                host == rhs.host) ? true : false;
-    }
+    ~IPaddr() { }
 
-    bool operator!=(const IP_ADDRESS& ip2)
+public:
+    //------------------------------------------------------------------------//
+    bool valid()
+    {
+        return forbidden.find(host) == forbidden.end();
+    }
+    //------------------------------------------------------------------------//
+    bool operator==(const IPaddr& rhs)
+    {
+      return this->host == rhs.host;
+    }
+    //------------------------------------------------------------------------//
+    bool operator!=(const IPaddr& ip2)
     {
         return !(*this == ip2);
     }
-
-    IP_ADDRESS& operator=(const IP_ADDRESS& rhs)
+    //------------------------------------------------------------------------//
+    IPaddr& operator=(const IPaddr& rhs)
     {
-        if(*this != rhs) {
-            ip_id = rhs.ip_id;
+        if(*this != rhs)
             host = rhs.host;
-        }
         return *this;
     }
-
-    friend std::ostream& operator<<(std::ostream& out, const IP_ADDRESS& ip)
+    //------------------------------------------------------------------------//
+    friend std::ostream& operator<<(std::ostream& out, const IPaddr& ip)
     {
-        out << ip.ip_id << "  " << ip.host << " ";
+        out << "127.0.0.1  " << ip.host << " ";
+        if(ip.host.find("www.") != 0)
+            out << "\n127.0.0.1  www." << ip.host << " ";
         return out;
     }
-
-    bool operator>(const IP_ADDRESS& ip2) const
+    //------------------------------------------------------------------------//
+    bool operator>(const IPaddr& rhs) const
     {
-        return (host > ip2.host) ? true : false;
+        return this->host < rhs.host;
+    }
+    //------------------------------------------------------------------------//
+    bool operator<(const IPaddr& rhs) const
+    {
+        return this->host < rhs.host;
     }
 
-    bool operator<(const IP_ADDRESS& ip2) const
-    {
-        return (host < ip2.host) ? true : false;
-    }
+public:
+    //------------------------------------------------------------------------//
+    static ForbiddenList_t* GetForbiddenList() { return &forbidden; }
+    //------------------------------------------------------------------------//
 
 private:
-    std::string ip_id;
-    std::string host;
+    static ForbiddenList_t forbidden;
+    IP_t host;
 
 };
 
-//===================================================================================
+//============================================================================//
+
+IPaddr::ForbiddenList_t IPaddr::forbidden;
+
+//============================================================================//
 
 void WriteBeginning(std::ostream& out, std::string file)
 {
@@ -134,7 +184,29 @@ void WriteBeginning(std::ostream& out, std::string file)
 
 }
 
-//===================================================================================
+//============================================================================//
+
+void ProcessOriginal(const std::string& file)
+{
+    std::ifstream in(file.c_str());
+    std::stringstream ss;
+    if(in)
+    {
+        std::vector<std::string> delimit;
+        while(tools::GetLineAndDelimit(in," \t,","#",delimit))
+        {
+            for(unsigned i = 1; i < delimit.size(); ++i)
+                IPaddr::GetForbiddenList()->insert(delimit.at(i));
+
+        }
+    } else {
+      throw std::runtime_error("Unable to open original hosts file");
+      exit(EXIT_FAILURE);
+    }
+
+}
+
+//============================================================================//
 
 int main(int argc, char** argv)
 {
@@ -143,11 +215,13 @@ int main(int argc, char** argv)
     std::vector<std::string> files;
     std::string output = "hosts.ultrasafe";
     std::string orig = "";
+    std::string odir = ".";
 
     CommandLineOptions* clo = new CommandLineOptions();
 
     clo->AddOption('f',"files","Provide files to combine",true,-1,FORCE);
     clo->AddOption('u',"update-winhost","Update the WIN host filename",false,0);
+    clo->AddOption('U',"update-dir","Working directory of update",true,1);
     clo->AddOption('o',"output-file","Provide the output file",true, 1);
     clo->AddOption('d',"default","Original hosts file",true, 1,FORCE);
 
@@ -155,45 +229,104 @@ int main(int argc, char** argv)
 
     clo->GetOption('f', files);
     clo->GetOption('u', updatewinhosts);
+    clo->GetOption('U', odir);
     clo->GetOption('o', output);
     clo->GetOption('d', orig);
 
-    if(updatewinhosts) {
-        UpdateWinHosts();
-        std::string dir = "WIN_HOSTS";
-        std::string file = "WINHOSTS2002.zip";
-        int success = UnzipToFolder(file, dir);
-        if(success != 0) {
-            Exception("Update WinHosts2002","Error unzipping " + file + " to directory",dir, WARNING);
-        }
-        winhostfile = dir + "/HOSTS";
-	files.push_back(winhostfile);
+    if(odir.find_last_of("/") == odir.length()-1)
+        odir.erase(odir.length()-1);
+
+    if(odir != ".")
+    {
+        bool ret = tools::AddDirectory(odir);
+        if(!ret)
+            std::runtime_error("Unable to make output directory " + odir);
     }
 
-    std::set<IP_ADDRESS> IPS;
+    odir = tools::MakeDirectoryString(odir);
+
+#ifdef USE_PSTREAMS
+    std::vector<std::string> files2;
+    for(auto itr = files.begin(); itr != files.end(); ++itr)
+    {
+        std::stringstream ss;
+        ss << "/bin/ls " << *itr;
+        // run a process and create a streambuf that reads its stdout and stderr
+        redi::ipstream proc(ss.str().c_str(), redi::pstreams::pstdout);
+        std::string line, stdout = "", stderr = "";
+        // read child's stdout
+        while (std::getline(proc.out(), line))
+            stdout += line + " ";
+        // read child's stderr
+        while (std::getline(proc.err(), line))
+            stderr += line;
+        if(!stderr.empty())
+            throw std::runtime_error(stderr.c_str());
+
+        auto flist = tools::delimit(stdout, " \n\t");
+
+        if(flist.size() == 0 || (flist.size() == 1 && flist.front() == *itr))
+            files2.push_back(*itr);
+        else
+            for(auto f : flist)
+                files2.push_back(f);
+    }
+
+    files = files2;
+#endif
+
+    std::string win_host_folder = "";
+    std::string win_host_zipped = "";
+    if(updatewinhosts)
+    {
+        UpdateWinHosts(odir);
+        std::string dir = odir + "WIN_HOSTS";
+        std::string file = odir + "WINHOSTS2002.zip";
+        int success = UnzipToFolder(file, dir);
+        if(success != 0) {
+            Exception("Update WinHosts2002",
+                      "Error unzipping " + file + " to directory", dir, WARNING);
+        }
+        winhostfile = dir + "/HOSTS";
+        files.push_back(winhostfile);
+        win_host_folder = dir;
+        win_host_zipped = file;
+    }
+
+    ProcessOriginal(orig);
+
+    // make the scope local
+    {
+        std::string fname = odir + "Forbidden.txt";
+        std::ofstream out(fname.c_str());
+        for(auto itr : *IPaddr::GetForbiddenList())
+            out << itr << std::endl;
+    }
+
+    std::set<IPaddr> ip_addresses;
     std::vector<std::string> discarded;
 
-    for( auto file : files ) {
+    for( auto file : files )
+    {
         std::vector<std::string> delimit;
         std::ifstream in;
         bool cppremovectrl = RemoveWeirdControlCharactersFile(file);
         std::cout << "Opening file " << file << "..." << std::endl;
         in.open(file.c_str());
-        if(!in) {
+        if(!in)
+        {
             Exception("IFSTREAM", "Could not open file", file, WARNING);
             continue;
         }
 
-        if(cppremovectrl) { std::cout << file << " : C++ Remove CTRL characters..." << std::endl; }
-
-        bool start = false;
-        while(tools::GetLineAndDelimit(in," \t,","#",delimit)) {
-
-            if(cppremovectrl) {
+        while(tools::GetLineAndDelimit(in," \t,","#",delimit))
+        {
+            if(cppremovectrl)
+            {
                 std::string str = "";
                 std::vector<std::string> fixeddelimit;
-                for(auto ite = delimit.begin(); ite != delimit.end(); ++ite) {
-                    //if(RemoveWeirdControlCharacters(*ite).empty()) { delimit.erase(ite); }
+                for(auto ite = delimit.begin(); ite != delimit.end(); ++ite)
+                {
                     str = RemoveWeirdControlCharacters(*ite);
                     if(!str.empty()) { fixeddelimit.push_back(str); }
                 }
@@ -201,59 +334,84 @@ int main(int argc, char** argv)
                 delimit = fixeddelimit;
             }
 
-            if(delimit.size() == 2) {
+            //----------------------------------------------------------------//
+            auto discard = [&discarded,&delimit] (IPaddr::cIP_t_ref s)
+            {
+                discarded.push_back(tools::undelimit({delimit.at(0), s}, "  "));
+            };
+            //----------------------------------------------------------------//
 
-                IP_ADDRESS IP(IP_ADDRESS(delimit.at(0),delimit.at(1)));
-                if(!start && IP.IsLocal()) {
-                    start = true;
-                } else if(start && IP.IsLocal()) {
-                    continue;
-                } else if(!IP.IsLocal()) {
-                    IPS.insert(IP);
-                } else {
-                    discarded.push_back(tools::undelimit(delimit," "));
+            for(unsigned i = 1; i < delimit.size(); ++i)
+            {
+                IPaddr ip(delimit.at(i));
+
+                if(i > 1 && (delimit.at(0) == "127.0.0.1" ||
+                             delimit.at(0) == "0.0.0.0"))
+                {
+                    std::stringstream ss;
+                    ss << "Does " << delimit.at(i) << " from \"";
+                    tools::print(delimit,"\t|\t", ss);
+                    ss << "\" belong in the host file? (y/n)\n";
+                    std::cout << ss.str();
+                    std::string answer;
+                    std::cin >> answer;
+                    if(!tools::GetBoolFromString(answer))
+                    {
+                        discard(delimit.at(i));
+                        continue;
+                    }
                 }
 
-            } else if(delimit.size() > 2) {
-                tools::print_line_break(std::cout,1);
-                tools::print(delimit,"\t|\t",std::cout);
-                tools::print_line_break(std::cout,2);
-                std::cout << "Does this belong in the combined? [size = " << delimit.size() << "]" << std::endl;
-                std::string answer;
-                std::cin >> answer;
-                if(tools::GetBoolFromString(answer)) {
-                    IP_ADDRESS IP(IP_ADDRESS(IP_ADDRESS(delimit.at(0),delimit.at(1))));
-                    std::cout << "Adding " << IP << "..." << std::endl;
-                    IPS.insert(IP);
-                } else {
-                    discarded.push_back(tools::undelimit(delimit," "));
-                }
-            } else {
-                discarded.push_back(tools::undelimit(delimit,", "));
+                if(ip.valid())
+                    ip_addresses.insert(ip);
+                else
+                    discard(delimit.at(i));
             }
         }
-        std::cout << "Done reading " << file << std::endl;
+        std::cout << "Done reading " << file << "." << std::endl;
         in.close();
 
     }
 
+    output = odir + output;
     std::ofstream out(output.c_str());
     WriteBeginning(out, orig);
-    std::cout << "Printing IP hosts..." << std::endl;
-    for( auto ip : IPS ) {
+    std::cout << "Printing IP hosts : " << output << " ..." << std::endl;
+    for( auto ip : ip_addresses ) {
         out << ip << std::endl;
     }
 
     out.close();
 
     std::cout << "Printing discarded..." << std::endl;
-    std::ofstream discard("Discarded.txt");
+    std::string dname = odir + "Discarded.txt";
+    std::ofstream discard(dname.c_str());
 
     for( auto something : discarded ) {
         discard << something << std::endl;
     }
 
     discard.close();
+
+    if(!win_host_folder.empty())
+    {
+        std::stringstream ss;
+        ss << "if [ -d " << win_host_folder << " ]; then rm -rf "
+           << win_host_folder << "; fi";
+        int ret = std::system(ss.str().c_str());
+        if(ret > 0)
+            std::runtime_error("Command failed: " + ss.str());
+    }
+
+    if(!win_host_zipped.empty())
+    {
+        std::stringstream ss;
+        ss << "if [ -f " << win_host_zipped << " ]; then rm -rf "
+           << win_host_zipped << "; fi";
+        int ret = std::system(ss.str().c_str());
+        if(ret > 0)
+            std::runtime_error("Command failed: " + ss.str());
+    }
 
     return 0;
 }
