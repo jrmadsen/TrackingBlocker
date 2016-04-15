@@ -219,11 +219,11 @@ int main(int argc, char** argv)
 
     CommandLineOptions* clo = new CommandLineOptions();
 
-    clo->AddOption('f',"files","Provide files to combine",true,-1,FORCE);
-    clo->AddOption('u',"update-winhost","Update the WIN host filename",false,0);
-    clo->AddOption('U',"update-dir","Working directory of update",true,1);
-    clo->AddOption('o',"output-file","Provide the output file",true, 1);
-    clo->AddOption('d',"default","Original hosts file",true, 1,FORCE);
+    clo->AddOption('f',"files","Provide files to combine",-1,FORCE);
+    clo->AddOption('u',"update-winhost","Update the WIN host filename");
+    clo->AddOption('U',"update-dir","Working directory of update", 1);
+    clo->AddOption('o',"output-file","Provide the output file", 1);
+    clo->AddOption('d',"default","Original hosts file", 1,FORCE);
 
     clo->ProcessCommandLine(argc,argv);
 
