@@ -1,28 +1,31 @@
 
 include(MacroUtilities)
 include(ExternalProject)
+include(GNUInstallDirs)
 
 option(BUILD_GUI "Build Qt interface" OFF)
 add_feature(BUILD_GUI "Build Qt interface")
 
 if(BUILD_GUI)
-  option(USE_QT_QMAKE 
+  option(USE_QT_QMAKE
          "Build the Qt interface using QMake externally instead of CMake" OFF)
-  add_subfeature(BUILD_GUI USE_QT_QMAKE 
+  add_subfeature(BUILD_GUI USE_QT_QMAKE
                  "Build the Qt interface using QMake externally instead of CMake")
 
   set(new_include_dirs )
   set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
                PROPERTY INCLUDE_DIRECTORIES ${new_include_dirs})
   set(CMAKE_INCLUDE_CURRENT_DIR ON)
-  include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+  include_directories(${CMAKE_CURRENT_SOURCE_DIR}
+      ${CMAKE_CURRENT_SOURCE_DIR}/source
+      ${PROJECT_SOURCE_DIR}/tools)
 
   ConfigureRootSearchPath(QT)
   ConfigureRootSearchPath(QT4)
   ConfigureRootSearchPath(QT5)
 
   set(name QtTrackingBlocker)
-  set(path Qt)
+  set(path ${PROJECT_SOURCE_DIR}/Qt)
 
   file(GLOB HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/source/*.hh)
   file(GLOB SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/source/*.cc)
@@ -34,7 +37,7 @@ if(BUILD_GUI)
   if(NOT USE_QT_QMAKE AND NOT CMAKE_VERSION VERSION_LESS 3.0)
     set(CMAKE_AUTOMOC ON)
     option(USE_QT4 "Force use of Qt4 always" OFF)
-    add_subfeature(BUILD_GUI USE_QT4 
+    add_subfeature(BUILD_GUI USE_QT4
                    "Force explicit use of Qt4 (don't search for Qt5)")
 
     if(NOT USE_QT4)
@@ -53,12 +56,13 @@ if(BUILD_GUI)
                           ${Qt5Gui_INCLUDE_DIRS}
                           ${Qt5OpenGL_INCLUDE_DIRS}
                           ${Qt5PrintSupport_INCLUDE_DIRS} )
-      add_executable(${name} ${name}.cc ${HEADERS} ${SOURCES})
+      add_executable(${name} ${path}/${name}.cc ${HEADERS} ${SOURCES})
       target_link_libraries(${name}
                             ${Qt5Core_LIBRARIES}
                             ${Qt5Gui_LIBRARIES}
                             ${Qt5OpenGL_LIBRARIES}
-                            ${Qt5PrintSupport_LIBRARIES})
+                            ${Qt5PrintSupport_LIBRARIES}
+                            ${EXTERNAL_LIBRARIES})
       add_custom_target(vis DEPENDS ${name})
     else()
       unset(Qt5Core_DIR CACHE)
@@ -74,7 +78,8 @@ if(BUILD_GUI)
       target_link_libraries(${name}
                             Qt4::QtCore
                             Qt4::QtGui
-                            Qt4::QtOpenGL)
+                            Qt4::QtOpenGL
+                            ${EXTERNAL_LIBRARIES})
       add_custom_target(vis DEPENDS ${name})
     endif()
     install(TARGETS ${name} DESTINATION ${CMAKE_INSTALL_BINDIR})

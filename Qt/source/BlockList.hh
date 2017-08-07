@@ -11,29 +11,33 @@
 
 #ifndef blocklist_hh_
 #define blocklist_hh_
-class BlockList
+
+#include <QTabWidget>
+#include <QMainWindow>
+#include <QResizeEvent>
+#include <QTableWidget>
+
+class BlockList : public QTableWidget
 {
-public:
-	// Constructor and Destructors
-	BlockList();
-	// Virtual destructors are required by abstract classes 
-	// so add it by default, just in case
-	virtual ~BlockList();
+    Q_OBJECT
 
 public:
-	// Public functions
+    // Constructor and Destructors
+    BlockList(QWidget* parent, QString);
+    // Virtual destructors are required by abstract classes
+    // so add it by default, just in case
+    virtual ~BlockList();
+
+public:
+    // Public functions
+    void read();
 
 protected:
-	// Protected functions
+    // Protected functions
 
 protected:
-	// Protected variables
-
-private:
-	// Private functions
-
-private:
-	// Private variables
+    // Protected variables
+    QString m_file_name;
 
 };
 
