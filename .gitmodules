@@ -1,6 +1,0 @@
-[submodule "tools"]
-	path = tools
-	url = ssh://jmadsen-ne-server/opt/repos/common-tools
-[submodule "cmake"]
-	path = cmake
-	url = ssh://jmadsen-ne-server/opt/repos/cmake
