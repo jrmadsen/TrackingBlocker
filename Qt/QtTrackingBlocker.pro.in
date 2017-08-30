@@ -42,4 +42,3 @@ DEFINES         += @EXTRA_DEFINES@
 QMAKE_CFLAGS    += -Wno-unused-function
 QMAKE_CXXFLAGS  += -Wno-unused-function -std=c++11
 
-ICON = PDT_input_visualizer.icns
