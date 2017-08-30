@@ -3,14 +3,12 @@ include(MacroUtilities)
 include(ExternalProject)
 include(GNUInstallDirs)
 
-option(BUILD_GUI "Build Qt interface" OFF)
-add_feature(BUILD_GUI "Build Qt interface")
+add_option(BUILD_GUI "Build Qt interface" OFF)
 
 if(BUILD_GUI)
   option(USE_QT_QMAKE
          "Build the Qt interface using QMake externally instead of CMake" OFF)
-  add_subfeature(BUILD_GUI USE_QT_QMAKE
-                 "Build the Qt interface using QMake externally instead of CMake")
+  mark_as_advanced(USE_QT_QMAKE)
 
   set(new_include_dirs )
   set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
@@ -18,7 +16,7 @@ if(BUILD_GUI)
   set(CMAKE_INCLUDE_CURRENT_DIR ON)
   include_directories(${CMAKE_CURRENT_SOURCE_DIR}
       ${CMAKE_CURRENT_SOURCE_DIR}/source
-      ${PROJECT_SOURCE_DIR}/tools)
+      ${PROJECT_SOURCE_DIR}/source)
 
   ConfigureRootSearchPath(QT)
   ConfigureRootSearchPath(QT4)
@@ -37,8 +35,7 @@ if(BUILD_GUI)
   if(NOT USE_QT_QMAKE AND NOT CMAKE_VERSION VERSION_LESS 3.0)
     set(CMAKE_AUTOMOC ON)
     option(USE_QT4 "Force use of Qt4 always" OFF)
-    add_subfeature(BUILD_GUI USE_QT4
-                   "Force explicit use of Qt4 (don't search for Qt5)")
+    mark_as_advanced(USE_QT4)
 
     if(NOT USE_QT4)
       find_package(Qt5Core QUIET)
@@ -106,7 +103,7 @@ if(BUILD_GUI)
                      "QMake executable")
     endif()
 
-    add_subfeature(BUILD_GUI QMAKE_EXE "QMake executable")
+    mark_as_advanced(QMAKE_EXE)
 
     if(NOT "${QMAKE_EXE}" STREQUAL "QMAKE_EXE-NOTFOUND")
         add_custom_target(${name}_config
@@ -114,7 +111,7 @@ if(BUILD_GUI)
                           COMMENT "Generating ${name}.pro ..."
                           WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/${path})
         add_custom_target(${name} ALL
-                          COMMAND ${CMAKE_MAKE_PROGRAM} -j8
+                          COMMAND ${CMAKE_COMMAND} --build . -- -j8
                           COMMENT "Building ${name}..."
                           DEPENDS ${name}_config
                           WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/${path})

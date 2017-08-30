@@ -213,7 +213,7 @@ int main(int argc, char** argv)
     bool updatewinhosts = false;
     std::string winhostfile = "HOSTS";
     std::vector<std::string> files;
-    std::string output = "hosts.ultrasafe";
+    std::string output = "hosts.profile.0";
     std::string orig = "";
     std::string odir = ".";
 

@@ -1,4 +1,0 @@
-#!/bin/bash
-
-/usr/local/bin/run-as-root-wrapper /usr/local/bin/pyscripts/TrackingBlocker.py $@
-

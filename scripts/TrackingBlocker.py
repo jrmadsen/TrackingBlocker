@@ -19,10 +19,8 @@ def ShouldModify(file1, file2):
 
 def ComposeFilesToModify(data_dir, type):
     files = []
-    if(type == "safe" or type == "all"):
-        files.append(os.path.join(data_dir, "hosts.safe"))
-    if(type == "ultrasafe" or type == "all"):
-        files.append(os.path.join(data_dir, "hosts.ultrasafe"))
+    if(type == "0" or type == "all"):
+        files.append(os.path.join(data_dir, "hosts.profile.0"))
     return files
 
 #==============================================================================#
@@ -35,7 +33,7 @@ def ComposeDataDir(prefix, data_folder):
 #==============================================================================#
 
 def install_cmd(args):
-    exe_install_path = os.path.join(args.prefix, "bin/ModifyTrackingBlocker")
+    exe_install_path = os.path.join(args.prefix, "bin/tracking_blocker")
 
     if(not run_command.wrap_to_run_as_root(exe_install_path, sys.argv[0])):
         os.symlink(os.path.realpath(sys.argv[0]), exe_install_path)
@@ -66,13 +64,8 @@ def status_cmd(args):
         f2 = os.path.join(args.host_folder, "hosts")
         if(ShouldModify(f1, f2)):
             shutil.copy2(f1, f2)
-    elif(args.command == "safe"):
-        f1 = os.path.join(data_dir, "hosts.safe")
-        f2 = os.path.join(args.host_folder, "hosts")
-        if(ShouldModify(f1, f2)):
-            shutil.copy2(f1, f2)
-    elif(args.command == "ultrasafe" or args.command == "on"):
-        f1 = os.path.join(data_dir, "hosts.ultrasafe")
+    elif(args.command == "0" or args.command == "on"):
+        f1 = os.path.join(data_dir, "hosts.profile.0")
         f2 = os.path.join(args.host_folder, "hosts")
         if(ShouldModify(f1, f2)):
             shutil.copy2(f1, f2)
@@ -150,24 +143,22 @@ def remove_cmd(args):
 
 def update_cmd(args):
 
-    os.environ["PATH"] += ":" + args.rm_ctrl_M
-    rm_ctrl_M_path = find_executable("rm_CTRL-M")
-    if(not rm_ctrl_M_path):
-        home_folders = ["/home", "/Users"]
-        for home in home_folders:
-            for root, dirs, files in os.walk(home):
-                for dirhome in dirs:
-                    for hroot, hdirs, hfiles in os.walk(os.path.join(root,dirhome)):
-                        lvls=len(hroot.split("/"))
-                        if(lvls > 4):
-                            break
-                        for hdir in hdirs:
-                            print 'checking',os.path.join(hroot,hdir)
-                            if "Scripts" in hdir:
-                                os.environ["PATH"] += ":" + os.path.join(hroot,hdir)
-                                break
-        rm_ctrl_M_path = find_executable("rm_CTRL-M")
-    print os.environ["PATH"]
+    rm_ctrl_M_path = os.path.normpath(os.path.abspath(
+        os.path.join(sys.argv[0],
+                     os.path.join(args.rm_ctrl_M,
+                                  "remove-ctrl-M.bash"))))
+
+    if(not os.path.exists(rm_ctrl_M_path)):
+        rm_ctrl_M_path = find_executable(os.path.join(args.rm_ctrl_M,
+                                                      "remove-ctrl-M.bash"))
+
+        if(not os.path.exists(rm_ctrl_M_path)):
+            rm_ctrl_M_path = find_executable("remove-ctrl-M.bash")
+
+            if(not os.path.exists(rm_ctrl_M_path)):
+                print "Unable to find \"remove-ctrl-M.bash\""
+                sys.exit(1)
+
     combine_hosts_path = os.path.normpath(os.path.abspath(
         os.path.join(sys.argv[0],
                      os.path.join(args.exe_path,
@@ -178,6 +169,7 @@ def update_cmd(args):
                                                           args.exe_name))
         if(not os.path.exists(combine_hosts_path)):
             combine_hosts_path = find_executable(args.exe_name)
+
             if(not os.path.exists(combine_hosts_path)):
                 print 'Unable to find',args.exe_name
                 sys.exit(1)
@@ -217,7 +209,7 @@ def main(argv):
                         default="/usr/local", nargs=1)
     parser.add_argument("-d", "--data-folder",
                         help="Data folder containing host files - {PREFIX}/...",
-                        default="share/TrackingBlocker", nargs=1)
+                        default="etc/TrackingBlocker", nargs=1)
     parser.add_argument("--host-folder", help="Folder where host files reside",
                         default="/etc", nargs=1)
     subparser = parser.add_subparsers(help="sub-command help")
@@ -230,14 +222,14 @@ def main(argv):
     # Status option
     stat_choice = subparser.add_parser("status", help="TrackingBlocker status change/display")
     stat_choice.add_argument("command", help="Parser command",
-                             choices=['original', 'off', 'on', 'safe',
-                                      'ultrasafe', 'display'])
+                             choices=['original', 'off', 'on',
+                                      'profile.0', 'display'])
     stat_choice.set_defaults(func=status_cmd)
 
     # Add option
     add_choice = subparser.add_parser("add", help="Add domain to TrackingBlocker")
     add_choice.add_argument("-t", "--type", help="Tracking type to add to",
-                            choices=['all','safe','ultrasafe'],
+                            choices=['all','profile.0'],
                             default="all")
     add_choice.add_argument("domain", nargs='*', help="Domains to add")
     add_choice.set_defaults(func=add_cmd)
@@ -245,9 +237,9 @@ def main(argv):
     # Remove option
     remove_choice = subparser.add_parser("remove", help="Remove domain from "
         + "TrackingBlocker (removed domains are added to "
-        + "{PREFIX}/share/TrackingBlocker/hosts.{type}.removed)")
+        + "{PREFIX}/etc/TrackingBlocker/hosts.{type}.removed)")
     remove_choice.add_argument("-t", "--type", help="Tracking type to remove from",
-                               choices=['all','safe','ultrasafe'],
+                               choices=['all','profile.0'],
                                default="all")
     remove_choice.add_argument("-a", "--all-matching", action="store_true",
                                help="Remove all domains starting with domains listed")
@@ -266,14 +258,14 @@ def main(argv):
     update_choice.add_argument("-d","--default", help="default HOST file",
                                required=True)
     update_choice.add_argument("-t", "--type", help="Tracking type to update",
-                               choices=['all','safe','ultrasafe'],
-                               default="ultrasafe")
+                               choices=['all','profile.0'],
+                               default="profile.0")
     update_choice.add_argument("--exe-path", help="Path to combine_hosts exe",
                                default="../libexec")
     update_choice.add_argument("--exe-name", help="Alternative name to \"combine_hosts\"",
                                default="combine_hosts")
     update_choice.add_argument("--rm-ctrl-M", help="Script to remove ^M characters",
-                               default="/home/jmadsen/Scripts")
+                               default="pyscripts")
     update_choice.set_defaults(func=update_cmd)
 
     #if(not subprocess.call(join(["sudo", "-n", "echo", "-n"], ' '))):
@@ -282,7 +274,6 @@ def main(argv):
 
     args = parser.parse_args()
     data_dir = ComposeDataDir(args.prefix, args.data_folder)
-    #print args,";","data_dir = ",data_dir
     if(not os.path.exists(data_dir) and args.func != install_cmd):
         print 'TrackingBlocker has not been installed'
         sys.exit(1)

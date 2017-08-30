@@ -1,0 +1,78 @@
+#!/bin/bash
+
+EXE=@CMAKE_INSTALL_FULL_BINDIR@/pyscripts/TrackingBlocker.py
+
+available()
+{
+    which $1 >/dev/null 2>&1
+}
+
+platform=`uname`
+
+if [ "$platform" == "Darwin" ]; then
+    MESSAGE="Please run $1 as root with sudo or install osascript (should be installed by default)"
+else
+    MESSAGE="Please run $1 as root with sudo or install gksu / kdesudo!"
+fi
+
+ARGS="${@}"
+
+if [ `whoami` != "root" ]; then
+
+    if [ "$platform" == "Darwin" ]; then
+        # Apple
+        if available osascript
+        then
+            SUDO=`which osascript`
+        fi
+    else 
+        # assume Linux
+        # choose either gksudo or kdesudo
+        # if both are avilable check whoch desktop is running
+        if available gksudo ; then
+            SUDO=`which gksudo`
+            ARGS="$(echo ${@} | sed 's/ -H / --preserve-env /')"
+        elif available kdesudo ; then
+            SUDO=`which kdesudo`
+        fi
+        if ( available gksudo && available kdesudo ) ; then
+            if [ $XDG_CURRENT_DESKTOP = "KDE" ]; then
+                SUDO=`which kdesudo`;
+            else
+                SUDO=`which gksudo`
+            fi
+        fi
+
+        # prefer polkit if available
+        if available pkexec ; then
+           SUDO=`which pkexec`
+        fi
+    fi
+
+    if [ -z ${SUDO} ]; then
+        if available zenity; then
+            zenity --info --text "$MESSAGE"
+            exit 0
+        elif available notify-send; then
+            notify-send "$MESSAGE"
+            exit 0
+        elif available xmessage notify-send; then
+            xmessage -buttons Ok:0 "$MESSAGE"
+            exit 0
+        else
+            echo "$MESSAGE"
+        fi
+    fi
+
+fi
+
+if [ "$platform" == "Darwin" ]; then
+    if [ `whoami` != "root" ]; then
+    	${SUDO} -e "do shell script \"${EXE} $*\" with administrator privileges"
+    else
+    	${SUDO} ${EXE} ${ARGS}
+    fi
+else
+    ${SUDO} ${EXE} ${ARGS}
+fi
+
