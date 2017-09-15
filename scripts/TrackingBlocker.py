@@ -1,12 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/python2
 
 import os
 import sys
 import argparse
-import copy
 import filecmp
-import glob
-import subprocess
 import shutil
 from distutils.spawn import find_executable
 
@@ -44,18 +41,55 @@ def install_cmd(args):
 
 #==============================================================================#
 
-def lc(file):
-    return sum(1 for l in open(file))
+def get_unique(_l):
+    _s = set()
+    for i in _l:
+        _s.add(i)
+    return list(_s)
 
 #==============================================================================#
+# line count function
+def lc(file):
+    #return sum(1 for l in open(file))
+    f = open(file, 'r')
+    lines = f.readlines()
+    f.close()
+    # pop out domains from lines
+    prefixes = ["127.0.0.1"," ","www."]
+    index_delete = []
+    # loop over lines
+    for i in range(0, len(lines)):
+        # strip newline and tab
+        lines[i] = lines[i].strip("\n")
+        lines[i] = lines[i].strip("\t")
+        # skip comments and empty lines
+        if not lines[i] or (len(lines[i]) > 0 and lines[i][0] == '#'):
+            index_delete.append(i)
+            continue
+        # strip prefixes
+        for p in prefixes:
+            lines[i] = lines[i].strip(p)
+    # remove empty lines and comments
+    for i in reversed(index_delete):
+        lines.pop(i)
+    # alphabetically sort
+    lines = sorted(lines, key=str.lower)
+    # get unique entries
+    lines = get_unique(lines)
 
+    # return length of lines
+    return len(lines)
+
+#==============================================================================#
+# display number of domains blocked
 def display(args, data_dir):
     lc1 = lc(os.path.join(args.host_folder, "hosts"))
     lc2 = lc(os.path.join(data_dir, "hosts.original"))
-    print os.path.join(args.host_folder, "hosts"),"is blocking approximately",lc1-lc2,"domains"
+    print os.path.join(args.host_folder, "hosts"), "is blocking approximately", \
+        lc1-lc2, "domains (www-prefixed and non-www-prefixed e.g., www.ad-site.com and ad-site.com)"
 
 #==============================================================================#
-
+# handle status commands
 def status_cmd(args):
     data_dir = ComposeDataDir(args.prefix, args.data_folder)
 
@@ -71,6 +105,12 @@ def status_cmd(args):
             shutil.copy2(f1, f2)
     elif(args.command == "display"):
         display(args, data_dir)
+    else:
+        f1 = os.path.join(data_dir, "hosts.profile.%i" % (int(args.command)))
+        f2 = os.path.join(args.host_folder, "hosts")
+        if os.path.exists(f1):
+            if(ShouldModify(f1, f2)):
+                shutil.copy2(f1, f2)
 
     if(args.command != "display"):
         display(args, data_dir)
@@ -289,7 +329,6 @@ if __name__ == "__main__":
     script_path = os.path.abspath(os.path.dirname(os.path.realpath(sys.argv[0])))
     sys.path.append(os.path.join(script_path, "pypath"))
     from run_command import run_command, join
-    import run_command
     main(sys.argv[1:])
 
 #==============================================================================#
