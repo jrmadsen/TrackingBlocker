@@ -14,6 +14,7 @@
 #   include <pstreams/pstream.h>
 #endif
 
+// not currently used
 static std::string local_hostname = "localhost";
 
 //============================================================================//
