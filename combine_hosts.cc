@@ -14,6 +14,8 @@
 #   include <pstreams/pstream.h>
 #endif
 
+static std::string local_hostname = "localhost";
+
 //============================================================================//
 
 std::string get_exe_path()
@@ -130,9 +132,9 @@ public:
     //------------------------------------------------------------------------//
     friend std::ostream& operator<<(std::ostream& out, const IPaddr& ip)
     {
-        out << "127.0.0.1  " << ip.host << " ";
+        out << "127.0.0.1  " << ip.host;
         if(ip.host.find("www.") != 0)
-            out << "\n127.0.0.1  www." << ip.host << " ";
+            out << "\n127.0.0.1  www." << ip.host;
         return out;
     }
     //------------------------------------------------------------------------//
@@ -208,8 +210,27 @@ void ProcessOriginal(const std::string& file)
 
 //============================================================================//
 
+void SetLocalHostname()
+{
+  {
+    std::stringstream ss;
+    ss << "hostname > hostname.txt";
+    std::system(ss.str().c_str());
+  }
+  {
+    std::ifstream in("hostname.txt");
+    if(in)
+      in >> local_hostname;
+    in.close();
+  }
+}
+
+//============================================================================//
+
 int main(int argc, char** argv)
 {
+    SetLocalHostname();
+
     bool updatewinhosts = false;
     std::string winhostfile = "HOSTS";
     std::vector<std::string> files;
