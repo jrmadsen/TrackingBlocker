@@ -53,6 +53,12 @@ configure_file(
 )
 
 configure_file(
+    ${PROJECT_SOURCE_DIR}/scripts/run_command.py
+    ${PROJECT_BINARY_DIR}/pyscripts/run_command.py
+    COPYONLY
+)
+
+configure_file(
     ${PROJECT_SOURCE_DIR}/scripts/remove-ctrl-M.bash
     ${PROJECT_BINARY_DIR}/pyscripts/remove-ctrl-M.bash
     COPYONLY

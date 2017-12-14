@@ -32,6 +32,7 @@ install(
     FILES
         ${PROJECT_BINARY_DIR}/pyscripts/TrackingBlocker.py
         ${PROJECT_BINARY_DIR}/pyscripts/remove-ctrl-M.bash
+        ${PROJECT_BINARY_DIR}/pyscripts/run_command.py
     DESTINATION
         ${CMAKE_INSTALL_BINDIR}/pyscripts
     PERMISSIONS

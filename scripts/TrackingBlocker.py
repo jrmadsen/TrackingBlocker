@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 
 import os
 import sys
@@ -85,8 +85,8 @@ def lc(file):
 def display(args, data_dir):
     lc1 = lc(os.path.join(args.host_folder, "hosts"))
     lc2 = lc(os.path.join(data_dir, "hosts.original"))
-    print os.path.join(args.host_folder, "hosts"), "is blocking approximately", \
-        lc1-lc2, "domains (www-prefixed and non-www-prefixed e.g., www.ad-site.com and ad-site.com)"
+    print (os.path.join(args.host_folder, "hosts"), "is blocking approximately", \
+        lc1-lc2, "domains (www-prefixed and non-www-prefixed e.g., www.ad-site.com and ad-site.com)")
 
 #==============================================================================#
 # handle status commands
@@ -122,7 +122,7 @@ def add_cmd(args):
     files = ComposeFilesToModify(data_dir, args.type)
 
     for fname in files:
-        print 'Adding domains to',fname
+        print ('Adding domains to',fname)
         f = open(fname, 'a')
         for d in args.domain:
             d = d.lstrip("www.")
@@ -136,7 +136,7 @@ def remove_cmd(args):
     data_dir = ComposeDataDir(args.prefix, args.data_folder)
     files = ComposeFilesToModify(data_dir, args.type)
     for fname in files:
-        print 'Removing domains from',fname
+        print ('Removing domains from',fname)
         # remove file
         rfname = os.path.join(data_dir, os.path.basename(fname) + ".removed")
         # load previous removes
@@ -169,7 +169,7 @@ def remove_cmd(args):
                         subtract += 1
                         line2 = line2.strip('\n')
                         line2 = line2.strip()
-                        print 'Removing',line2,"..."
+                        print ('Removing',line2,"...")
                         if(not args.load_previous_removes and not p):
                             fr = open(rfname, 'a')
                             fr.write(line2 + '\n')
@@ -196,7 +196,7 @@ def update_cmd(args):
             rm_ctrl_M_path = find_executable("remove-ctrl-M.bash")
 
             if(not os.path.exists(rm_ctrl_M_path)):
-                print "Unable to find \"remove-ctrl-M.bash\""
+                print ("Unable to find \"remove-ctrl-M.bash\"")
                 sys.exit(1)
 
     combine_hosts_path = os.path.normpath(os.path.abspath(
@@ -211,7 +211,7 @@ def update_cmd(args):
             combine_hosts_path = find_executable(args.exe_name)
 
             if(not os.path.exists(combine_hosts_path)):
-                print 'Unable to find',args.exe_name
+                print ('Unable to find',args.exe_name)
                 sys.exit(1)
 
     data_dir = ComposeDataDir(args.prefix, args.data_folder)
@@ -230,7 +230,7 @@ def update_cmd(args):
                 cmd.append(os.path.abspath(f))
         ret = run_command.run_command(cmd)
         if(ret > 0):
-            print 'Error running command:', join(cmd, ' ')
+            print ('Error running command:', join(cmd, ' '))
             sys.exit(ret)
         else:
             shutil.copy2(ofile, os.path.join(data_dir, os.path.basename(ofile)))
@@ -315,7 +315,7 @@ def main(argv):
     args = parser.parse_args()
     data_dir = ComposeDataDir(args.prefix, args.data_folder)
     if(not os.path.exists(data_dir) and args.func != install_cmd):
-        print 'TrackingBlocker has not been installed'
+        print ('TrackingBlocker has not been installed')
         sys.exit(1)
     elif(not os.path.exists(data_dir)):
         os.makedirs(data_dir)
