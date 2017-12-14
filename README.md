@@ -53,7 +53,5 @@ $ sudo tracking_blocker remove --load-previous-removes
 
 There is preliminary support for a Qt interface (not fully working currently) and preliminary
 support for different profiles (default is '0' i.e., hosts.profile.0). This idea behind this
-is the ability to maintain a basic adblocker (for adult use) and another for children/teenager
-use i.e. this is an EXCELLENT way to ensure parental-controls because it is browser-independent,
-free, and ensures no work-around without the superuser password.
+is the ability to maintain a various level of ad-blocking.
 
